@@ -4,7 +4,7 @@ port = 8643
 interval = "5s"
 
 [log]
-level = "debug"
+level = "info"
 
 [tls]
 cert_path = "./dev/cert/localhost.crt"
