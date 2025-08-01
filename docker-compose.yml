@@ -1,0 +1,27 @@
+services:
+  web:
+    image: ghcr.io/qcrg/effective-dollop:latest
+    environment:
+      EVDP_DATABASE_POSTGRES_HOST: "postgres"
+      EVDP_DATABASE_POSTGRES_PASSWD: "${EVDP_DATABASE_POSTGRES_PASSWD}"
+    ports:
+      - 8643:8643
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:14.18
+    environment:
+      POSTGRES_USER: guest
+      POSTGRES_PASSWORD: ${EVDP_DATABASE_POSTGRES_PASSWD}
+      POSTGRES_DB: evdp
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U guest -d evdp"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./dev/postgres/init/:/docker-entrypoint-initdb.d
+    ports:
+      - 5432:5432

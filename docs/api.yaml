@@ -1,0 +1,180 @@
+openapi: 3.0.4
+info:
+  title: bookish-guacamole
+  version: 0.0.8
+servers:
+  - url: https://localhost:8643/
+tags:
+  - name: monitoring
+    description: Operations for monitoring service
+  - name: currency
+paths:
+  /health:
+    get:
+      tags:
+        - monitoring
+      summary: Cheking if the service is still alive.
+      responses:
+        "200":
+          description: "Service is alive."
+  /version:
+    get:
+      tags:
+        - monitoring
+      summary: Get current version of service.
+      responses:
+        "200":
+          description: "Returns current version of service."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version:
+                    type: string
+                    example: "0.3.2"
+
+  /currency/add:
+    post:
+      tags:
+        - currency
+      summary: Add coin to observe
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ControlCurrencyReq"
+      responses:
+        "204":
+          description: "Successful added coin from observing list"
+        "400":
+          description: "Not found coin with this name"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Err"
+  /currency/remove:
+    post:
+      tags:
+        - currency
+      summary: Remove coin from observing list
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ControlCurrencyReq"
+      responses:
+        "204":
+          description: "Successful removed coin from observing list"
+        "400":
+          description: "Not found coin with this name"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Err"
+  /currency/price:
+    get:
+      tags:
+        - currency
+      summary: Get coin price
+      description: Get coin price nereast to defined timestamp
+      parameters:
+        - in: query
+          name: coin
+          schema:
+            type: string
+          description: "Coin name"
+        - in: query
+          name: timestamp
+          schema:
+            type: number
+            format: int64
+          description: "Timestamp"
+      responses:
+        "200":
+          description: "Successful request"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  coin:
+                    type: string
+                    description: Coin name
+                    example: bitcoin
+                  timestamp:
+                    type: number
+                    format: int64
+                    description: A suitable timestamp
+                    example: "0123541"
+                  price:
+                    type: number
+                    format: float32
+                    description: Price in USD
+                    example: 34567.03
+
+        "400":
+          description: "Not found coin with this name"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Err"
+        "404":
+          description: "Prices is not saved with this coin"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Err"
+
+components:
+  parameters:
+    AcceptVersion:
+      in: header
+      name: Accept-Version
+      required: true
+      schema:
+        type: string
+        description: "Version as semver"
+        default:
+          $ref: "#/info/version"
+  responses:
+    UnauthorizedError:
+      description: |
+        Authentification error:
+        - Invalid/overdue token.
+        - No Authorization header.
+        - Invalid Authorization header format.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Err"
+    BadRequestError:
+      description: |
+        Request is incorrect:
+        - Invalid parameters
+        - Invalid request body
+        - Invalid version
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Err"
+  schemas:
+    Err:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              format: int32
+              example: -1
+            reason:
+              type: string
+              example: "Generic error. Some useful information for human... or not."
+    ControlCurrencyReq:
+      type: object
+      properties:
+        coin:
+          type: string
+          example: "bitcoin"
